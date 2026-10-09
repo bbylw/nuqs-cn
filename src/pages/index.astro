@@ -1,0 +1,902 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Section from "../components/Section.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import InstallTabs from "../components/InstallTabs.astro";
+import AdaptersTabs from "../components/AdaptersTabs.astro";
+import UrlBarDemo from "../components/demos/UrlBarDemo.tsx";
+import CounterDemo from "../components/demos/CounterDemo.tsx";
+import { ParsersPlaygroundIsland } from "../components/demos/ParsersPlayground.tsx";
+import CoordinatesDemo from "../components/demos/CoordinatesDemo.tsx";
+import HistoryDemo from "../components/demos/HistoryDemo.tsx";
+
+const helloWorld = `'use client' // 仅在客户端组件中生效
+
+import { useQueryState } from 'nuqs'
+
+export default () => {
+  const [name, setName] = useQueryState('name')
+  return (
+    <>
+      <h1>Hello, {name || 'anonymous visitor'}!</h1>
+      <input value={name || ''} onChange={e => setName(e.target.value)} />
+      <button onClick={() => setName(null)}>Clear</button>
+    </>
+  )
+}`;
+
+const parsersImport = `import {
+  parseAsString,
+  parseAsInteger,
+  parseAsFloat,
+  parseAsBoolean,
+  parseAsTimestamp,
+  parseAsIsoDateTime,
+  parseAsArrayOf,
+  parseAsJson,
+  parseAsStringEnum,
+  parseAsStringLiteral,
+  parseAsNumberLiteral
+} from 'nuqs'
+
+useQueryState('tag') // 默认按字符串处理
+useQueryState('count', parseAsInteger)
+useQueryState('brightness', parseAsFloat)
+useQueryState('darkMode', parseAsBoolean)
+useQueryState('after', parseAsTimestamp) // 状态为 Date
+useQueryState('date', parseAsIsoDateTime) // 状态为 Date
+useQueryState('array', parseAsArrayOf(parseAsInteger)) // 状态为 number[]
+useQueryState('json', parseAsJson<Point>()) // 状态为 Point
+
+// 枚举（仅支持基于字符串）
+enum Direction {
+  up = 'UP',
+  down = 'DOWN',
+  left = 'LEFT',
+  right = 'RIGHT'
+}
+
+const [direction, setDirection] = useQueryState(
+  'direction',
+  parseAsStringEnum<Direction>(Object.values(Direction)) // 传入允许值列表
+    .withDefault(Direction.up)
+)
+
+// 字面量（仅支持基于字符串）
+const colors = ['red', 'green', 'blue'] as const
+
+const [color, setColor] = useQueryState(
+  'color',
+  parseAsStringLiteral(colors) // 传入只读的允许值列表
+    .withDefault('red')
+)
+
+// 字面量（仅支持基于数字）
+const diceSides = [1, 2, 3, 4, 5, 6] as const
+
+const [side, setSide] = useQueryState(
+  'side',
+  parseAsNumberLiteral(diceSides) // 传入只读的允许值列表
+    .withDefault(4)
+)`;
+
+const customParser = `import { useQueryState } from 'nuqs'
+
+export default () => {
+  const [hex, setHex] = useQueryState('hex', {
+    // TypeScript 会依据 parse 的返回值自动推断出其为 number
+    parse: (query: string) => parseInt(query, 16),
+    serialize: value => value.toString(16)
+  })
+}`;
+
+const counterBefore = `import { useQueryState, parseAsInteger } from 'nuqs'
+
+export default () => {
+  const [count, setCount] = useQueryState('count', parseAsInteger)
+  return (
+    <>
+      <pre>count: {count}</pre>
+      <button onClick={() => setCount(0)}>Reset</button>
+      {/* 处理 setCount 中的 null 值很麻烦： */}
+      <button onClick={() => setCount(c => (c ?? 0) + 1)}>+</button>
+      <button onClick={() => setCount(c => (c ?? 0) - 1)}>-</button>
+      <button onClick={() => setCount(null)}>Clear</button>
+    </>
+  )
+}`;
+
+const counterAfter = `const [count, setCount] = useQueryState(
+  'count',
+  parseAsInteger.withDefault(0)
+)
+
+const increment = () => setCount(c => c + 1) // c 永远不会是 null
+const decrement = () => setCount(c => c - 1) // c 永远不会是 null
+const clearCount = () => setCount(null) // 从 URL 中移除该查询`;
+
+const historyOptions = `// 默认：用新状态替换当前历史
+useQueryState('foo', { history: 'replace' })
+
+// 将状态变化追加到历史记录：
+useQueryState('foo', { history: 'push' })`;
+
+const historyOverride = `const [query, setQuery] = useQueryState('q', { history: 'push' })
+
+// 这会覆盖钩子声明时的设置：
+setQuery(null, { history: 'replace' })`;
+
+const shallowOptions = `const [state, setState] = useQueryState('foo', { shallow: false })
+
+// 也可以在调用 setState 时传入该选项：
+setState('bar', { shallow: false })`;
+
+const throttleOptions = `useQueryState('foo', {
+  // 每秒最多向服务端发送一次更新
+  shallow: false,
+  throttleMs: 1000
+})
+
+// 也可以在调用 setState 时传入该选项：
+setState('bar', { throttleMs: 1000 })`;
+
+const transitionsCode = `'use client'
+
+import React from 'react'
+import { useQueryState, parseAsString } from 'nuqs'
+
+function ClientComponent({ data }) {
+  // 1. 提供你自己的 useTransition 钩子：
+  const [isLoading, startTransition] = React.useTransition()
+  const [query, setQuery] = useQueryState(
+    'query',
+    // 2. 将 startTransition 作为选项传入：
+    parseAsString.withOptions({
+      startTransition,
+      shallow: false // 选择通知服务端（仅 Next.js）
+    })
+  )
+  // 3. 当查询通过 setQuery 更新、服务端正在重新渲染
+  // 并流式传输 RSC 负载时，isLoading 会为 true。
+
+  // 显示加载状态
+  if (isLoading) return <div>Loading...</div>
+
+  // 携带数据正常渲染
+  return <div>{/*...*/}</div>
+}`;
+
+const builderPattern = `useQueryState(
+  'counter',
+  parseAsInteger.withDefault(0).withOptions({
+    history: 'push',
+    shallow: false
+  })
+)`;
+
+const createParserCode = `import { createParser, parseAsHex } from 'nuqs'
+
+// 将你的解析器/序列化器包裹进 createParser
+// 即可获得构建器模式与服务端解析能力：
+const hexColorSchema = createParser({
+  parse(query) {
+    if (query.length !== 6) {
+      return null // 对无效输入始终返回 null
+    }
+    return {
+      // 组合其它解析器时，它们也可能返回 null。
+      r: parseAsHex.parse(query.slice(0, 2)) ?? 0x00,
+      g: parseAsHex.parse(query.slice(2, 4)) ?? 0x00,
+      b: parseAsHex.parse(query.slice(4)) ?? 0x00
+    }
+  },
+  serialize({ r, g, b }) {
+    return (
+      parseAsHex.serialize(r) +
+      parseAsHex.serialize(g) +
+      parseAsHex.serialize(b)
+    )
+  }
+})
+  // 例如：直接设置通用选项
+  .withOptions({ history: 'push' })
+
+// 或在具体使用时：
+useQueryState(
+  'tribute',
+  hexColorSchema.withDefault({
+    r: 0x66,
+    g: 0x33,
+    b: 0x99
+  })
+)`;
+
+const multipleQueries = `const MultipleQueriesDemo = () => {
+  const [lat, setLat] = useQueryState('lat', parseAsFloat)
+  const [lng, setLng] = useQueryState('lng', parseAsFloat)
+  const randomCoordinates = React.useCallback(() => {
+    setLat(Math.random() * 180 - 90)
+    setLng(Math.random() * 360 - 180)
+  }, [])
+}`;
+
+const multipleQueriesAwait = `const randomCoordinates = React.useCallback(() => {
+  setLat(42)
+  return setLng(12)
+}, [])
+
+randomCoordinates().then((search: URLSearchParams) => {
+  search.get('lat') // 42
+  search.get('lng') // 12，已被排队并批量更新
+})`;
+
+const useQueryStatesCode = `import { useQueryStates, parseAsFloat } from 'nuqs'
+
+const [coordinates, setCoordinates] = useQueryStates(
+  {
+    lat: parseAsFloat.withDefault(45.18),
+    lng: parseAsFloat.withDefault(5.72)
+  },
+  {
+    history: 'push'
+  }
+)
+
+const { lat, lng } = coordinates
+
+// 一次性设置全部（或其中一部分）键：
+const search = await setCoordinates({
+  lat: Math.random() * 180 - 90,
+  lng: Math.random() * 360 - 180
+})`;
+
+const loaderCode = `import { createLoader } from 'nuqs' // 或 'nuqs/server'
+
+const searchParams = {
+  q: parseAsString,
+  page: parseAsInteger.withDefault(1)
+}
+
+const loadSearchParams = createLoader(searchParams)
+
+const { q, page } = loadSearchParams('?q=hello&page=2')`;
+
+const searchParamsCacheCode = `// searchParams.ts
+import {
+  createSearchParamsCache,
+  parseAsInteger,
+  parseAsString
+} from 'nuqs/server'
+// 注意：从 'nuqs/server' 导入，以避开 "use client" 指令
+
+export const searchParamsCache = createSearchParamsCache({
+  // 在此列出你的搜索参数键名及对应的解析器：
+  q: parseAsString.withDefault(''),
+  maxResults: parseAsInteger.withDefault(10)
+})`;
+
+const serverPageCode = `// page.tsx
+import { searchParamsCache } from './searchParams'
+
+export default function Page({
+  searchParams
+}: {
+  searchParams: Record<string, string | string[] | undefined>
+}) {
+  // ⚠️ 别忘了在此调用 parse。
+  // 你可以从返回的对象中获取类型安全的值：
+  const { q: query } = searchParamsCache.parse(searchParams)
+  return (
+    <div>
+      <h1>Search Results for {query}</h1>
+      <Results />
+    </div>
+  )
+}
+
+function Results() {
+  // 在子服务端组件中访问类型安全的搜索参数：
+  const maxResults = searchParamsCache.get('maxResults')
+  return <span>Showing up to {maxResults} results</span>
+}`;
+
+const sharedParsersCode = `// searchParams.ts
+import {
+  parseAsFloat,
+  createSearchParamsCache
+} from 'nuqs/server'
+
+export const coordinatesParsers = {
+  lat: parseAsFloat.withDefault(45.18),
+  lng: parseAsFloat.withDefault(5.72)
+}
+export const coordinatesCache = createSearchParamsCache(
+  coordinatesParsers
+)
+
+// page.tsx
+import { coordinatesCache } from './searchParams'
+import { Server } from './server'
+import { Client } from './client'
+
+export default async function Page({ searchParams }) {
+  await coordinatesCache.parse(searchParams)
+  return (
+    <>
+      <Server />
+      <Suspense>
+        <Client />
+      </Suspense>
+    </>
+  )
+}
+
+// server.tsx
+import { coordinatesCache } from './searchParams'
+
+export function Server() {
+  // 一次性获取全部键：
+  const { lat, lng } = coordinatesCache.all()
+  // 也可以单独访问各键：
+  // const lat = coordinatesCache.get('lat')
+  // const lng = coordinatesCache.get('lng')
+  return (
+    <span>
+      Latitude: {lat} - Longitude: {lng}
+    </span>
+  )
+}
+
+// client.tsx
+// prettier-ignore
+;'use client'
+
+import { useQueryStates } from 'nuqs'
+import { coordinatesParsers } from './searchParams'
+
+export function Client() {
+  const [{ lat, lng }, setCoordinates] = useQueryStates(coordinatesParsers)
+  // ...
+}`;
+
+const serializerCode = `import {
+  createSerializer,
+  parseAsInteger,
+  parseAsIsoDateTime,
+  parseAsString,
+  parseAsStringLiteral
+} from 'nuqs/server'
+
+const searchParams = {
+  search: parseAsString,
+  limit: parseAsInteger,
+  from: parseAsIsoDateTime,
+  to: parseAsIsoDateTime,
+  sortBy: parseAsStringLiteral(['asc', 'desc'])
+}
+
+// 通过传入要接受的搜索参数描述来创建序列化函数
+const serialize = createSerializer(searchParams)
+
+// 随后，向它传入一些值（子集亦可），即可渲染为查询字符串
+serialize({
+  search: 'foo bar',
+  limit: 10,
+  from: new Date('2024-01-01'),
+  // 此处我们省略了 to，它不会被添加
+  sortBy: null // null 值也不会被渲染
+})
+// ?search=foo+bar&limit=10&from=2024-01-01T00:00:00.000Z`;
+
+const serializerBaseCode = `serialize('/path?baz=qux', { foo: 'bar' }) // /path?baz=qux&foo=bar
+
+const search = new URLSearchParams('?baz=qux')
+serialize(search, { foo: 'bar' }) // ?baz=qux&foo=bar
+
+const url = new URL('https://example.com/path?baz=qux')
+serialize(url, { foo: 'bar' }) // https://example.com/path?baz=qux&foo=bar
+
+// 传入 null 会移除已有的值
+serialize('?remove=me', { foo: 'bar', remove: null }) // ?foo=bar`;
+
+const inferTypeCode = `import { parseAsInteger, type inferParserType } from 'nuqs' // 或 'nuqs/server'
+
+const intNullable = parseAsInteger
+const intNonNull = parseAsInteger.withDefault(0)
+
+inferParserType<typeof intNullable> // number | null
+inferParserType<typeof intNonNull> // number`;
+
+const inferRecordCode = `import { parseAsBoolean, parseAsInteger, type inferParserType } from 'nuqs' // 或 'nuqs/server'
+
+const parsers = {
+  a: parseAsInteger,
+  b: parseAsBoolean.withDefault(false)
+}
+
+inferParserType<typeof parsers>
+// { a: number | null, b: boolean }`;
+
+const testingCode = `import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import {
+  withNuqsTestingAdapter,
+  type OnUrlUpdateFunction
+} from 'nuqs/adapters/testing'
+import { describe, expect, it, vi } from 'vitest'
+import { CounterButton } from './counter-button'
+
+it('should increment the count when clicked', async () => {
+  const user = userEvent.setup()
+  const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+  render(<CounterButton />, {
+    // 通过传入初始搜索参数 / 查询字符串来搭建测试，
+    // 并提供一个在 URL 更新时调用的函数
+    wrapper: withNuqsTestingAdapter({ searchParams: '?count=42', onUrlUpdate })
+  })
+  // 初始状态断言：存在一个显示计数的可点击按钮
+  const button = screen.getByRole('button')
+  expect(button).toHaveTextContent('count is 42')
+  // 操作
+  await user.click(button)
+  // 断言状态与（被 mock 的）URL 中的变化
+  expect(button).toHaveTextContent('count is 43')
+  expect(onUrlUpdate).toHaveBeenCalledOnce()
+  const event = onUrlUpdate.mock.calls[0]![0]!
+  expect(event.queryString).toBe('?count=43')
+  expect(event.searchParams.get('count')).toBe('43')
+  expect(event.options.history).toBe('push')
+})`;
+
+const debugCode = `// 在应用中引入一次：
+import 'nuqs/debug'`;
+
+const debugConsoleCode = `// 在开发者工具中：
+localStorage.setItem('debug', 'nuqs')`;
+
+const seoCode = `import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/url/path/without/querystring'
+  }
+}`;
+
+const lossyCode = `const geoCoordParser = {
+  parse: parseFloat,
+  serialize: v => v.toFixed(4) // 丢失精度
+}
+
+const [lat, setLat] = useQueryState('lat', geoCoordParser)`;
+
+const codeClass = "font-mono text-fog-200";
+const linkClass =
+  "text-fog-200 underline decoration-line underline-offset-4 transition-colors hover:text-signal";
+---
+
+<BaseLayout>
+  <!-- ============ HERO ============ -->
+  <section id="top" class="relative overflow-hidden px-5 pb-16 pt-28 sm:px-6 sm:pt-32">
+    <div class="mx-auto grid max-w-5xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+      <div class="reveal">
+        <p class="label-mono flex items-center gap-2.5">
+          <span class="ping-dot relative inline-block h-1.5 w-1.5 rounded-full bg-signal"></span>
+          TYPE-SAFE SEARCH PARAMS FOR REACT
+        </p>
+        <h1 class="mt-6 font-display text-[clamp(3.2rem,9vw,5.75rem)] font-bold leading-[0.92] tracking-tighter text-fog-50">URL<br /><span class="text-signal">即</span>状态。</h1>
+        <p class="mt-6 max-w-lg text-[17px] leading-relaxed text-fog-300 text-pretty">面向 React 各类框架的、类型安全的搜索参数状态管理器。用法类似 <code class="font-mono text-[15px] text-signal">useState</code>，但状态存储在 URL 查询字符串中。</p>
+
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <div class="group flex items-center gap-2.5 rounded-lg border border-line bg-ink-850/90 py-2.5 pl-4 pr-2.5 transition-colors duration-200 hover:border-signal/40">
+            <span class="font-mono text-sm text-fog-500">$</span>
+            <code class="font-mono text-sm text-fog-50">bun add nuqs</code>
+            <button type="button" data-copy-btn data-copy="bun add nuqs" class="flex items-center gap-1.5 rounded px-2 py-1 font-mono text-[11px] text-fog-400 transition-colors hover:text-signal data-[copied=true]:text-signal" aria-label="复制安装命令">
+              <svg viewBox="0 0 14 14" class="h-3.5 w-3.5 stroke-current" fill="none" stroke-width="1.3"><rect x="4.5" y="4.5" width="8" height="8" rx="1.5"></rect><path d="M9.5 4.5v-2a1 1 0 0 0-1-1H3.5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2" stroke-linecap="round"></path></svg>
+              <span data-copy-label>复制</span>
+            </button>
+          </div>
+          <a href="#features" class="rounded-lg border border-signal/50 bg-signal/10 px-4 py-2.5 font-mono text-sm text-signal transition-all duration-200 hover:bg-signal/20 active:scale-[0.98]">浏览特性</a>
+        </div>
+
+        <ul class="mt-7 flex flex-wrap gap-2" aria-label="项目信息">
+          <li class="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-fog-400">npm v2.10.2</li>
+          <li class="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-fog-400">TypeScript</li>
+          <li class="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-fog-400">MIT 许可证</li>
+          <li class="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-fog-400">CI/CD</li>
+          <li class="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-fog-400">GitHub Sponsors</li>
+        </ul>
+      </div>
+
+      <div class="reveal" style="--reveal-delay: 140ms">
+        <UrlBarDemo client:load />
+      </div>
+    </div>
+
+    <div class="marquee-mask mx-auto mt-16 max-w-5xl overflow-hidden sm:mt-20" aria-hidden="true">
+      <div class="marquee-track flex w-max items-center gap-8 whitespace-nowrap">
+        {
+          Array.from({ length: 2 }).map(() => (
+            <span class="flex items-center gap-8 font-mono text-xs tracking-[0.2em] text-fog-500">
+              <span>NEXT.JS APP ROUTER</span><span class="text-signal/60">·</span>
+              <span>NEXT.JS PAGES ROUTER</span><span class="text-signal/60">·</span>
+              <span>纯 REACT SPA</span><span class="text-signal/60">·</span>
+              <span>REMIX</span><span class="text-signal/60">·</span>
+              <span>REACT ROUTER V6</span><span class="text-signal/60">·</span>
+              <span>REACT ROUTER V7</span><span class="text-signal/60">·</span>
+              <span>REACT ROUTER V8</span><span class="text-signal/60">·</span>
+              <span>TANSTACK ROUTER</span><span class="text-signal/60">·</span>
+              <span>自定义适配器</span><span class="text-signal/60">·</span>
+            </span>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 特性 ============ -->
+  <Section id="features" num="01" label="FEATURES" title="特性" lede="URL 是唯一可信来源——nuqs 围绕它提供了一整套类型安全的工具链。">
+    <div class="grid grid-cols-6 gap-3">
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-4">
+        <div class="flex items-baseline gap-4">
+          <span class="font-mono text-xs tabular-nums text-signal">01</span>
+          <h3 class="font-display text-xl font-semibold">全框架适配器</h3>
+        </div>
+        <p class="mt-3 max-w-xl text-sm leading-relaxed text-fog-400">新增支持 Next.js（<code class={codeClass}>app</code> 与 <code class={codeClass}>pages</code> 路由）、纯 React（SPA）、Remix、React Router、TanStack Router，以及通过适配器实现的自定义路由。</p>
+        <div class="mt-5 flex flex-wrap gap-1.5">
+          {["Next.js · app", "Next.js · pages", "React SPA", "Remix", "RR v6", "RR v7", "RR v8", "TanStack Router", "自定义路由"].map((fw) => (
+            <span class="rounded-full border border-line bg-ink-900/60 px-2.5 py-1 font-mono text-[10px] text-fog-400 transition-colors duration-200 group-hover:border-signal/30">{fw}</span>
+          ))}
+        </div>
+      </article>
+
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-2" style="--reveal-delay: 80ms">
+        <div class="flex items-baseline gap-4">
+          <span class="font-mono text-xs tabular-nums text-signal">02</span>
+          <h3 class="font-display text-xl font-semibold">简单</h3>
+        </div>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">URL 即唯一可信来源。状态与地址栏永远同步——可分享、可收藏、可后退。</p>
+      </article>
+
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-2">
+        <div class="flex items-baseline gap-4">
+          <span class="font-mono text-xs tabular-nums text-signal">03</span>
+          <h3 class="font-display text-xl font-semibold">历史</h3>
+        </div>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">默认替换历史记录，或追加新条目——用「后退」按钮在状态更新之间导航。</p>
+      </article>
+
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-4" style="--reveal-delay: 80ms">
+        <div class="flex items-baseline gap-4">
+          <span class="font-mono text-xs tabular-nums text-signal">04</span>
+          <h3 class="font-display text-xl font-semibold">内置解析器</h3>
+        </div>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">支持常见状态类型：整数、浮点数、布尔值、Date 等。可为自定义类型创建解析器，生成美观的 URL。</p>
+        <div class="mt-5 flex flex-wrap gap-1.5">
+          {["Integer", "Float", "Boolean", "Timestamp", "IsoDateTime", "ArrayOf", "Json", "StringEnum", "StringLiteral", "NumberLiteral"].map((p) => (
+            <span class="rounded-full border border-line bg-ink-900/60 px-2.5 py-1 font-mono text-[10px] text-fog-400 transition-colors duration-200 group-hover:border-signal/30">parseAs{p}</span>
+          ))}
+        </div>
+      </article>
+
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-3">
+        <div class="flex items-baseline gap-4">
+          <span class="font-mono text-xs tabular-nums text-signal">05</span>
+          <h3 class="font-display text-xl font-semibold">useQueryStates</h3>
+        </div>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">关联多个查询字符串键——同一事件循环 tick 内的更新会被批量合并，一次性刷新到 URL。</p>
+      </article>
+
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-3" style="--reveal-delay: 80ms">
+        <div class="flex items-baseline gap-4">
+          <span class="font-mono text-xs tabular-nums text-signal">06</span>
+          <h3 class="font-display text-xl font-semibold">浅层更新</h3>
+        </div>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">默认仅改写客户端 URL，不向服务端发起请求；需要时也可通知 Server Components 重新渲染。</p>
+      </article>
+
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-3">
+        <div class="flex items-baseline gap-4">
+          <span class="font-mono text-xs tabular-nums text-signal">07</span>
+          <h3 class="font-display text-xl font-semibold">服务端缓存</h3>
+        </div>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400"><code class={codeClass}>createSearchParamsCache</code>：在嵌套的服务端组件中类型安全地访问 searchParams。</p>
+      </article>
+
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-3" style="--reveal-delay: 80ms">
+        <div class="flex items-baseline gap-4">
+          <span class="font-mono text-xs tabular-nums text-signal">08</span>
+          <h3 class="font-display text-xl font-semibold">过渡</h3>
+        </div>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">支持 <code class={codeClass}>useTransition</code>——在服务端用新 URL 重新渲染期间获取加载状态。</p>
+      </article>
+    </div>
+  </Section>
+
+  <!-- ============ 02 安装 ============ -->
+  <Section id="install" num="02" label="INSTALL" title="安装" lede="一个包，所有框架。nuqs 自带各框架的适配器子路径导出。">
+    <InstallTabs />
+    <p class="mt-6 text-sm leading-relaxed text-fog-500">完整文档请阅读 <a href="https://nuqs.dev" rel="noreferrer noopener" class="text-fog-300 underline decoration-line underline-offset-4 transition-colors hover:text-signal">nuqs.dev</a>。本站点使用 <code class={codeClass}>nuqs</code> 作为运行时依赖构建，页面中的交互演示即由它驱动。</p>
+  </Section>
+
+  <!-- ============ 03 适配器 ============ -->
+  <Section id="adapters" num="03" label="ADAPTERS" title="适配器" lede="你需要用对应框架的适配器包裹 React 组件树。切换下方标签，复制即可。">
+    <AdaptersTabs />
+  </Section>
+
+  <!-- ============ 04 用法 ============ -->
+  <Section id="usage" num="04" label="USAGE" title="用法" lede="useQueryState 接受一个必填参数：用于查询字符串中的键名。">
+    <CodeBlock code={helloWorld} lang="tsx" file="components/hello.tsx" />
+
+    <div class="mt-6 overflow-hidden rounded-xl border border-line">
+      <div class="border-b border-line bg-ink-800/40 px-4 py-2.5">
+        <span class="font-mono text-[11px] text-fog-400">「Hello World」示例的各种输出</span>
+      </div>
+      <div class="hidden grid-cols-[120px_100px_1fr] gap-x-6 border-b border-line-soft px-4 py-2.5 font-mono text-xs text-fog-500 sm:grid">
+        <div>URL</div>
+        <div>name 值</div>
+        <div>说明</div>
+      </div>
+      {[
+        { url: "/", value: "null", desc: "URL 中没有 name 键" },
+        { url: "/?name=", value: "''", desc: "空字符串" },
+        { url: "/?name=foo", value: "'foo'", desc: "字符串值" },
+        { url: "/?name=2", value: "'2'", desc: "默认始终返回字符串，详见下方「解析」" },
+      ].map((row) => (
+        <div class="grid grid-cols-[1fr_auto] items-baseline gap-x-4 border-b border-line-soft px-4 py-3 font-mono text-xs last:border-b-0 sm:grid-cols-[120px_100px_1fr] sm:gap-x-6">
+          <div class="text-fog-500">{row.url}</div>
+          <div class="text-right text-signal sm:text-left">{row.value}</div>
+          <div class="col-span-2 text-fog-400 sm:col-span-1">{row.desc}</div>
+        </div>
+      ))}
+    </div>
+
+    <p class="mt-6 text-sm leading-relaxed text-fog-400">与 <code class={codeClass}>React.useState</code> 类似，它返回一个数组：包含查询字符串中的值（字符串形式，若未找到则为 <code class={codeClass}>null</code>），以及一个状态更新函数。</p>
+  </Section>
+
+  <!-- ============ 05 解析 ============ -->
+  <Section id="parsing" num="05" label="PARSING" title="解析" lede="若你的状态类型不是字符串，必须在第二个参数对象中传入解析函数。我们为常见及更进阶的对象类型提供了相应解析器——逐个试试：">
+    <div class="reveal">
+      <ParsersPlaygroundIsland client:visible />
+    </div>
+
+    <div class="mt-10 grid gap-6 lg:grid-cols-2">
+      <div class="reveal">
+        <h3 class="font-display text-lg font-semibold text-fog-50">内置解析器一览</h3>
+        <CodeBlock code={parsersImport} lang="ts" file="parsers.ts" class="mt-4" maxH="30rem"  dense />
+      </div>
+      <div class="reveal" style="--reveal-delay: 100ms">
+        <h3 class="font-display text-lg font-semibold text-fog-50">自定义 parse / serialize</h3>
+        <CodeBlock code={customParser} lang="tsx" file="custom-parser.tsx" class="mt-4"  dense />
+        <p class="mt-4 text-sm leading-relaxed text-fog-400">TypeScript 会依据 <code class={codeClass}>parse</code> 的返回值自动推断状态类型。</p>
+      </div>
+    </div>
+  </Section>
+
+  <!-- ============ 06 默认值 ============ -->
+  <Section id="defaults" num="06" label="DEFAULTS" title="默认值" lede="当 URL 中不存在对应的查询字符串时，默认行为是返回 null 作为状态——这会让状态更新与 UI 渲染变得繁琐。">
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div class="reveal">
+        <h3 class="font-display text-lg font-semibold text-fog-50">没有默认值时</h3>
+        <CodeBlock code={counterBefore} lang="tsx" file="counter.before.tsx" class="mt-4" maxH="22rem"  dense />
+      </div>
+      <div class="reveal" style="--reveal-delay: 100ms">
+        <h3 class="font-display text-lg font-semibold text-fog-50">指定默认值后</h3>
+        <CounterDemo client:visible />
+        <CodeBlock code={counterAfter} lang="ts" file="counter.after.ts" class="mt-4"  dense />
+      </div>
+    </div>
+
+    <div class="reveal mt-6 flex items-start gap-3 rounded-xl border border-signal/25 bg-signal/[0.06] px-5 py-4">
+      <svg viewBox="0 0 14 14" class="mt-0.5 h-4 w-4 shrink-0 stroke-signal" fill="none" stroke-width="1.4" aria-hidden="true"><circle cx="7" cy="7" r="5.5" /><path d="M7 4.5v3M7 9.8v.2" stroke-linecap="round" /></svg>
+      <p class="text-sm leading-relaxed text-fog-300">注意：默认值仅存在于 React 内部，它<span class="text-fog-50">不会</span>被写入 URL。将状态设为 <code class="font-mono text-fog-100">null</code> 会移除查询字符串中的对应键，并将状态置为默认值。</p>
+    </div>
+  </Section>
+
+  <!-- ============ 07 选项 ============ -->
+  <Section id="options" num="07" label="OPTIONS" title="选项" lede="history、shallow、throttleMs、startTransition——每个选项都可以在钩子声明时设置，也可以在调用更新函数时覆盖。">
+    <div class="grid gap-8 border-t border-line-soft py-10 lg:grid-cols-2">
+      <div class="reveal">
+        <h3 class="font-display text-xl font-semibold text-fog-50">历史</h3>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">默认情况下，状态更新会在状态变化时，用更新后的查询替换当前的历史记录项。可以把它想象成一种 <code class={codeClass}>git squash</code>：所有改变状态的操作都被合并进同一个历史值。你也可以选择为每次状态变化（按键区分）向历史记录推送一个新条目。</p>
+        <CodeBlock code={historyOptions} lang="ts" file="history.ts" class="mt-4"  dense />
+        <CodeBlock code={historyOverride} lang="ts" file="history-override.ts" class="mt-4"  dense />
+      </div>
+      <div class="reveal" style="--reveal-delay: 100ms">
+        <HistoryDemo client:visible />
+      </div>
+    </div>
+
+    <div class="grid gap-8 border-t border-line-soft py-10 lg:grid-cols-2">
+      <div class="reveal">
+        <h3 class="font-display text-xl font-semibold text-fog-50">浅层</h3>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">此特性仅适用于 Next.js。默认情况下，查询状态更新以「客户端优先」的方式进行：不会向服务端发起网络请求。这等同于 Next.js pages router 中 <code class={codeClass}>shallow</code> 选项设为 <code class={codeClass}>true</code>，或在 app router 中开启实验性的 <a href="https://github.com/vercel/next.js/discussions/48110" rel="noreferrer noopener" class={linkClass}>windowHistorySupport</a> 标志。</p>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">若希望查询更新通知服务端（在 pages router 中重新运行 <code class={codeClass}>getServerSideProps</code>，在 app router 中重新渲染 Server Components），可将 <code class={codeClass}>shallow</code> 设为 <code class={codeClass}>false</code>：</p>
+      </div>
+      <div class="reveal" style="--reveal-delay: 100ms">
+        <CodeBlock code={shallowOptions} lang="ts" file="shallow.ts"  dense />
+      </div>
+    </div>
+
+    <div class="grid gap-8 border-t border-line-soft py-10 lg:grid-cols-2">
+      <div class="reveal">
+        <h3 class="font-display text-xl font-semibold text-fog-50">限制 URL 更新频率</h3>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">由于浏览器对 History API 进行了限流，对 URL 的内部更新会被排队并节流，默认 50ms。即便发送高频查询更新（如绑定到文本输入框或滑块），这一间隔也能满足大多数浏览器。Safari 的限流策略要严格得多，需要约 340ms 的节流间隔。如果你确实需要更长的更新间隔，可以在选项中指定。</p>
+        <div class="mt-4 rounded-xl border border-line-soft bg-ink-850/50 px-5 py-4">
+          <p class="text-sm leading-relaxed text-fog-400">钩子返回的状态总是<span class="text-fog-100">即时更新</span>，以保持 UI 响应。仅有对 URL 的改动，以及使用 <code class={codeClass}>shallow: false</code> 时向服务端发起的请求会被节流。如果多个钩子在同一个事件循环 tick 中设置了不同的节流值，将采用其中的最大值；低于 50ms 的值会被忽略。<a href="https://francoisbest.com/posts/2023/storing-react-state-in-the-url-with-nextjs#batching--throttling" rel="noreferrer noopener" class={linkClass}>了解更多</a>。</p>
+        </div>
+      </div>
+      <div class="reveal" style="--reveal-delay: 100ms">
+        <CodeBlock code={throttleOptions} lang="ts" file="throttle.ts"  dense />
+      </div>
+    </div>
+
+    <div class="grid gap-8 border-t border-line-soft py-10 lg:grid-cols-2">
+      <div class="reveal">
+        <h3 class="font-display text-xl font-semibold text-fog-50">过渡</h3>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">结合 <code class={codeClass}>shallow: false</code> 使用时，你可以利用 <code class={codeClass}>useTransition</code> 钩子，在服务端用更新后的 URL 重新渲染服务端组件期间，获取加载状态。将 <code class={codeClass}>useTransition</code> 提供的 <code class={codeClass}>startTransition</code> 函数传入选项即可启用此行为。</p>
+      </div>
+      <div class="reveal" style="--reveal-delay: 100ms">
+        <CodeBlock code={transitionsCode} lang="tsx" file="client-component.tsx" maxH="30rem"  dense />
+      </div>
+    </div>
+
+    <div class="grid gap-8 border-t border-line-soft py-10 lg:grid-cols-2">
+      <div class="reveal">
+        <h3 class="font-display text-xl font-semibold text-fog-50">配置解析器、默认值与选项</h3>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">你可以使用构建器（builder）模式，便捷地指定上述所有内容。</p>
+        <CodeBlock code={builderPattern} lang="ts" file="builder.ts" class="mt-4"  dense />
+      </div>
+      <div class="reveal" style="--reveal-delay: 100ms">
+        <h3 class="font-display text-lg font-semibold text-fog-50">自定义解析器同样支持</h3>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">你自定义解析器也能获得这一模式，并可与其它解析器组合。例如在 <a href="https://github.com/47ng/nuqs/blob/next/packages/docs/src/app/playground/(demos)/hex-colors/page.tsx" rel="noreferrer noopener" class={linkClass}>hex-colors 示例</a> 中查看运行效果。</p>
+        <CodeBlock code={createParserCode} lang="ts" file="hex-color-schema.ts" class="mt-4" maxH="32rem"  dense />
+      </div>
+    </div>
+  </Section>
+
+  <!-- ============ 08 多键查询 ============ -->
+  <Section id="multi" num="08" label="MULTIPLE" title="多个查询（批处理）" lede="你可以在单个事件循环 tick 内，按需调用任意多次状态更新函数，它们会被异步应用到 URL。">
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div class="reveal">
+        <CodeBlock code={multipleQueries} lang="ts" file="multiple-queries.ts"  dense />
+        <p class="mt-4 text-sm leading-relaxed text-fog-400">如果你想知道 URL 何时更新、以及其中包含什么，可以 <code class={codeClass}>await</code> 状态更新函数返回的 Promise，它会给出更新后的 <code class={codeClass}>URLSearchParams</code> 对象：</p>
+        <CodeBlock code={multipleQueriesAwait} lang="ts" file="multiple-queries-await.ts" class="mt-4"  dense />
+      </div>
+      <div class="reveal" style="--reveal-delay: 100ms">
+        <CoordinatesDemo client:visible />
+      </div>
+    </div>
+
+    <details class="reveal mt-6 rounded-xl border border-line bg-ink-850/50 px-5 py-4">
+      <summary class="cursor-pointer font-mono text-xs text-fog-400 transition-colors hover:text-signal">实现细节（Promise 缓存）</summary>
+      <div class="mt-3 text-sm leading-relaxed text-fog-400">
+        <p>返回的 Promise 会被缓存，直到下一次刷新到 URL 发生，因此在同一个事件循环 tick 内，对任意钩子的 setState 调用都会返回同一个 Promise 引用。</p>
+        <p class="mt-2">由于对 Web History API 的调用被节流，该 Promise 可能被缓存若干个 tick。批量更新会被合并，并一次性刷新到 URL。这意味着，如果在刷新发生前有另一个 setState 覆盖了前者，并非每一次 setState 都会反映到 URL。</p>
+        <p class="mt-2">返回的 React 状态会即时反映所有已设置的值，以保持 UI 响应。</p>
+      </div>
+    </details>
+
+    <div class="mt-10 border-t border-line-soft pt-10">
+      <h3 class="font-display text-2xl font-semibold text-fog-50">useQueryStates</h3>
+      <p class="mt-3 max-w-2xl text-sm leading-relaxed text-fog-400">对于应当始终一起变动的查询键，可以使用 <code class={codeClass}>useQueryStates</code>，并传入一个描述各键类型的对象。</p>
+      <CodeBlock code={useQueryStatesCode} lang="ts" file="coordinates.ts" class="mt-5" />
+    </div>
+  </Section>
+
+  <!-- ============ 09 服务端 ============ -->
+  <Section id="server" num="09" label="SERVER" title="服务端" lede="加载器、服务端缓存与序列化辅助函数——让搜索参数在 RSC 世界里同样类型安全。">
+    <div class="grid gap-8 border-t border-line-soft py-10 lg:grid-cols-2">
+      <div class="reveal">
+        <h3 class="font-display text-xl font-semibold text-fog-50">加载器</h3>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">若想一次性解析搜索参数，可以使用<span class="text-fog-100">加载器函数（loader）</span>。它接受多种类型的输入（字符串、URL、URLSearchParams、Request、Promise 等）。<a href="https://nuqs.dev/docs/server-side#loaders" rel="noreferrer noopener" class={linkClass}>了解更多</a>。</p>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">参见<a href="https://github.com/47ng/nuqs/blob/next/packages/docs/src/app/playground/(demos)/pagination/page.tsx" rel="noreferrer noopener" class={linkClass}>服务端解析示例</a>，其中展示了如何在客户端与服务端代码之间复用解析器配置的真实用例。</p>
+      </div>
+      <div class="reveal" style="--reveal-delay: 100ms">
+        <CodeBlock code={loaderCode} lang="ts" file="loader.ts"  dense />
+      </div>
+    </div>
+
+    <div class="grid gap-8 border-t border-line-soft py-10 lg:grid-cols-2">
+      <div class="reveal">
+        <h3 class="font-display text-xl font-semibold text-fog-50">在服务端组件中访问 searchParams</h3>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">如果你希望在深层嵌套的服务端组件（即非 Page 组件）中访问 searchParams，可以使用 <code class={codeClass}>createSearchParamsCache</code> 以类型安全的方式实现。</p>
+        <div class="mt-4 rounded-xl border border-line-soft bg-ink-850/50 px-5 py-4">
+          <p class="text-sm leading-relaxed text-fog-400">注意：解析器<span class="text-fog-100">不会校验</span>你的数据。如果你期望得到正整数或某种特定形状的 JSON 编码对象，需要把解析结果再交给 schema 校验库（如 <a href="https://zod.dev" rel="noreferrer noopener" class={linkClass}>Zod</a>）处理。</p>
+        </div>
+        <p class="mt-4 text-sm leading-relaxed text-fog-400">该缓存仅对当前页面渲染有效（参见 React 的 <a href="https://react.dev/reference/react/cache" rel="noreferrer noopener" class={linkClass}>cache</a> 函数）。</p>
+      </div>
+      <div class="reveal space-y-4" style="--reveal-delay: 100ms">
+        <CodeBlock code={searchParamsCacheCode} lang="ts" file="searchParams.ts"  dense />
+        <CodeBlock code={serverPageCode} lang="tsx" file="page.tsx" />
+      </div>
+    </div>
+
+    <div class="grid gap-8 border-t border-line-soft py-10 lg:grid-cols-2">
+      <div class="reveal">
+        <h3 class="font-display text-xl font-semibold text-fog-50">在客户端与服务端之间共享解析器</h3>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">缓存仅适用于<span class="text-fog-100">服务端组件</span>，但你可以与 <code class={codeClass}>useQueryStates</code> 共享解析器声明，以在客户端组件中保持类型安全。</p>
+      </div>
+      <div class="reveal" style="--reveal-delay: 100ms">
+        <CodeBlock code={sharedParsersCode} lang="tsx" file="shared-parsers.tsx" maxH="34rem"  dense />
+      </div>
+    </div>
+
+    <div class="grid gap-8 border-t border-line-soft py-10 lg:grid-cols-2">
+      <div class="reveal">
+        <h3 class="font-display text-xl font-semibold text-fog-50">序列化辅助函数</h3>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">若想用状态值填充 <code class={codeClass}>Link</code> 组件，可以使用 <code class={codeClass}>createSerializer</code> 辅助函数。向它传入一个描述搜索参数的对象，它会返回一个函数，调用时传入值，即可生成与钩子行为一致的查询字符串。</p>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">返回的 <code class={codeClass}>serialize</code> 函数可以接收一个基础参数，在其上追加/修改搜索参数。</p>
+      </div>
+      <div class="reveal space-y-4" style="--reveal-delay: 100ms">
+        <CodeBlock code={serializerCode} lang="ts" file="serializer.ts" maxH="26rem"  dense />
+        <CodeBlock code={serializerBaseCode} lang="ts" file="serializer-base.ts" maxH="14rem"  dense />
+      </div>
+    </div>
+
+    <div class="grid gap-8 border-t border-line-soft py-10 lg:grid-cols-2">
+      <div class="reveal">
+        <h3 class="font-display text-xl font-semibold text-fog-50">解析器类型推断</h3>
+        <p class="mt-3 text-sm leading-relaxed text-fog-400">若要获取解析器返回的基础类型，可以使用 <code class={codeClass}>inferParserType</code> 类型辅助函数。对于描述解析器的对象（即传给 <code class={codeClass}>createSearchParamsCache</code> 或 <code class={codeClass}>useQueryStates</code> 的那个），它会返回将解析器替换为其推断类型后的对象类型。</p>
+      </div>
+      <div class="reveal space-y-4" style="--reveal-delay: 100ms">
+        <CodeBlock code={inferTypeCode} lang="ts" file="infer-single.ts" maxH="10rem"  dense />
+        <CodeBlock code={inferRecordCode} lang="ts" file="infer-record.ts" maxH="10rem"  dense />
+      </div>
+    </div>
+  </Section>
+
+  <!-- ============ 10 测试 ============ -->
+  <Section id="testing" num="10" label="TESTING" title="测试" lede="自 nuqs v2 起，你可以使用测试适配器，在隔离环境中对使用了 useQueryState 与 useQueryStates 的组件进行单元测试，无需 mock 你的框架或路由。">
+    <CodeBlock code={testingCode} lang="tsx" file="counter-button.test.tsx" maxH="34rem"  dense />
+    <p class="mt-6 text-sm leading-relaxed text-fog-500">更多测试相关的讨论见 <a href="https://github.com/47ng/nuqs/issues/259" rel="noreferrer noopener" class="text-fog-300 underline decoration-line underline-offset-4 hover:text-signal">#259</a>。</p>
+  </Section>
+
+  <!-- ============ 11 调试 ============ -->
+  <Section id="debug" num="11" label="DEBUG" title="调试" lede="日志不会进入你的打包产物——除非你主动启用。">
+    <div class="grid gap-8 lg:grid-cols-2">
+      <div class="reveal">
+        <p class="text-sm leading-relaxed text-fog-400">首先在应用中引入一次 <code class={codeClass}>nuqs/debug</code> 入口。这样能确保日志不会进入你的打包产物，除非你主动启用。在区分客户端与服务端打包产物的框架中，请在需要日志的每个运行环境都引入它。然后，将 localStorage 中的 <code class={codeClass}>debug</code> 项设为 <code class={codeClass}>nuqs</code>，并刷新页面。</p>
+        <div class="mt-5 grid gap-4">
+          <CodeBlock code={debugCode} lang="ts" file="app-entry.ts" />
+          <CodeBlock code={debugConsoleCode} lang="js" file="devtools" />
+        </div>
+        <p class="mt-4 text-sm leading-relaxed text-fog-400">与 <code class={codeClass}>debug</code> 包不同，此处不支持通配符，但可组合使用：<code class={codeClass}>localStorage.setItem('debug', '*,nuqs')</code>。</p>
+        <p class="mt-4 text-sm leading-relaxed text-fog-400">日志行以 <code class={codeClass}>[nuq+ …]</code> 为前缀，表示钩子级别的消息；以 <code class={codeClass}>[nuqs &lt;子系统&gt;]</code> 为前缀，表示内部子系统（节流与防抖队列、适配器等）的日志，以及其它内部调试日志——完整清单见 <code class={codeClass}>packages/nuqs/src/lib/debug-messages.ts</code>。同时还会记录用户计时标记（User timings markers），便于使用浏览器开发者工具进行进阶性能分析。</p>
+        <p class="mt-4 text-sm leading-relaxed text-fog-400">在提交 <a href="https://github.com/47ng/nuqs/issues" rel="noreferrer noopener" class={linkClass}>issue</a> 时附上调试日志总是受欢迎的。</p>
+      </div>
+
+      <div class="space-y-8">
+        <div class="reveal rounded-xl border border-line bg-ink-850/50 p-6" style="--reveal-delay: 80ms">
+          <h3 class="font-display text-lg font-semibold text-fog-50">SEO</h3>
+          <p class="mt-3 text-sm leading-relaxed text-fog-400">如果你的页面将查询字符串用于本地状态，应该为页面添加规范 URL（canonical URL），告知 SEO 爬虫忽略查询字符串，将页面索引为不带查询字符串的形式。在 app router 中，可通过 metadata 对象实现：</p>
+          <CodeBlock code={seoCode} lang="ts" file="page.tsx" class="mt-4" maxH="24rem"  dense />
+          <p class="mt-4 text-sm leading-relaxed text-fog-400">但如果查询字符串用于定义页面展示的内容（例如 YouTube 的观看地址），你的规范 URL 应包含相关的查询字符串，并且你仍然可以使用解析器读取它、并序列化出规范 URL。</p>
+        </div>
+
+        <div class="reveal rounded-xl border border-amber-warn/30 bg-amber-warn/[0.05] p-6" style="--reveal-delay: 120ms">
+          <h3 class="flex items-center gap-2 font-display text-lg font-semibold text-fog-50">
+            <svg viewBox="0 0 14 14" class="h-4 w-4 stroke-amber-warn" fill="none" stroke-width="1.4" aria-hidden="true"><path d="M7 1.5 13 12H1L7 1.5Z" stroke-linejoin="round" /><path d="M7 5.5v3M7 10.3v.2" stroke-linecap="round" /></svg>
+            有损序列化
+          </h3>
+          <p class="mt-3 text-sm leading-relaxed text-fog-400">如果你的序列化器丢失精度、或不能准确表示底层状态值，在重新加载页面或从 URL 恢复状态（例如导航时）时会丢失该精度。</p>
+          <CodeBlock code={lossyCode} lang="ts" file="geo-coord-parser.ts" class="mt-4"  dense />
+          <p class="mt-4 text-sm leading-relaxed text-fog-400">此处，将纬度设为 1.23456789 会生成 <code class={codeClass}>lat=1.2345</code> 的 URL 查询字符串，而内部 <code class={codeClass}>lat</code> 状态会被正确设为 1.23456789。<span class="text-amber-warn">重新加载页面后，状态会被错误地设为 1.2345。</span></p>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- ============ 许可证收尾 ============ -->
+  <section class="border-t border-line-soft">
+    <div class="mx-auto max-w-5xl px-5 py-20 text-center sm:px-6">
+      <p class="label-mono">LICENSE</p>
+      <h2 class="mx-auto mt-4 max-w-2xl font-display text-4xl font-bold tracking-tight text-fog-50 sm:text-5xl">MIT，由 <a href="https://francoisbest.com" rel="noreferrer noopener" class="text-signal transition-colors hover:text-signal-strong">François Best</a> 制作</h2>
+      <p class="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-fog-400 text-pretty">工作中用到了这个包？<a href="https://github.com/sponsors/franky47" rel="noreferrer noopener" class="text-fog-200 underline decoration-line underline-offset-4 transition-colors hover:text-signal">赞助我</a>以帮助提供支持与维护。</p>
+      <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
+        <a href="https://github.com/47ng/nuqs" rel="noreferrer noopener" class="rounded-lg border border-signal/50 bg-signal/10 px-5 py-2.5 font-mono text-sm text-signal transition-all duration-200 hover:bg-signal/20 active:scale-[0.98]">GitHub 仓库</a>
+        <a href="https://www.npmjs.com/package/nuqs" rel="noreferrer noopener" class="rounded-lg border border-line px-5 py-2.5 font-mono text-sm text-fog-300 transition-all duration-200 hover:border-signal/40 hover:text-signal active:scale-[0.98]">npm 包</a>
+      </div>
+      <p class="mt-14 font-mono text-[11px] tracking-widest text-fog-500">非官方中文文档站点 · 内容译自 nuqs 官方 README</p>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,61 @@
+---
+import { sections } from "../data/sections";
+---
+
+<aside
+  id="toc"
+  class="fixed left-5 top-1/2 z-40 hidden -translate-y-1/2 opacity-0 transition-opacity duration-500 xl:block"
+  aria-label="本页目录"
+>
+  <p class="label-mono mb-3 pl-4">目录</p>
+  <nav class="border-l border-line pl-4">
+    <ul class="space-y-1">
+      {
+        sections.map((s) => (
+          <li>
+            <a
+              href={`#${s.id}`}
+              data-toc-link={s.id}
+              class="group flex items-baseline gap-2 py-0.5 font-mono text-xs text-fog-500 transition-colors duration-200 hover:text-fog-100 data-[active=true]:text-signal"
+            >
+              <span class="text-[10px] tabular-nums opacity-60">{s.num}</span>
+              <span class="tracking-wide">{s.label}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</aside>
+
+<script>
+  const links = new Map<string, HTMLAnchorElement>();
+  document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]").forEach((el) => {
+    const id = el.dataset.tocLink!;
+    links.set(id, el);
+  });
+  const sectionEls = Array.from(
+    document.querySelectorAll<HTMLElement>("main section[id]"),
+  );
+  const aside = document.getElementById("toc");
+
+  const onScroll = () => {
+    let current = sectionEls[0]?.id ?? "";
+    for (const el of sectionEls) {
+      if (el.getBoundingClientRect().top <= 160) current = el.id;
+    }
+    links.forEach((el, id) => {
+      el.dataset.active = String(id === current);
+    });
+    // 越过 hero 之后才显示目录，避免遮挡首屏内容
+    if (aside) {
+      const past =
+        window.scrollY >
+        (document.getElementById("top")?.offsetHeight ?? 0) - 200;
+      aside.style.opacity = past ? "1" : "0";
+      aside.style.pointerEvents = past ? "auto" : "none";
+    }
+  };
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+</script>

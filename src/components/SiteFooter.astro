@@ -1,0 +1,116 @@
+---
+import { sections } from "../data/sections";
+
+const year = new Date().getFullYear();
+
+const docLinks = sections.map((s) => ({ label: s.label, href: `#${s.id}` }));
+
+const resourceLinks = [
+  { label: "nuqs.dev 官方文档", href: "https://nuqs.dev", external: true },
+  { label: "GitHub 仓库", href: "https://github.com/47ng/nuqs", external: true },
+  { label: "npm 包", href: "https://www.npmjs.com/package/nuqs", external: true },
+  { label: "MIT 许可证", href: "https://github.com/47ng/nuqs/blob/next/LICENSE", external: true },
+];
+
+const communityLinks = [
+  { label: "提交 Issue", href: "https://github.com/47ng/nuqs/issues", external: true },
+  { label: "贡献者", href: "https://github.com/47ng/nuqs/graphs/contributors", external: true },
+  { label: "GitHub Sponsors", href: "https://github.com/sponsors/franky47", external: true },
+  { label: "François Best", href: "https://francoisbest.com", external: true },
+];
+---
+
+<footer class="relative mt-24 border-t border-line/60 bg-ink-950/70">
+  <div class="mx-auto max-w-5xl px-5 pt-16 pb-10 sm:px-6">
+    <!-- 品牌区 -->
+    <div class="flex flex-col gap-8 border-b border-line-soft pb-12 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <p class="font-display text-5xl font-bold leading-none tracking-tighter text-fog-50 sm:text-6xl">
+          <span class="text-signal">?</span>nuqs
+        </p>
+        <p class="mt-4 max-w-md text-sm leading-relaxed text-fog-400">
+          面向 React 各类框架的、类型安全的搜索参数状态管理器。<br />
+          用法类似 <code class="font-mono text-fog-200">useState</code>，但状态存储在 URL 查询字符串中。
+        </p>
+      </div>
+      <a
+        href="#top"
+        class="group inline-flex items-center gap-2 self-start rounded border border-line px-4 py-2 font-mono text-xs text-fog-300 transition-colors duration-200 hover:border-signal/50 hover:text-signal lg:self-auto"
+      >
+        回到顶部
+        <svg viewBox="0 0 16 16" class="h-3.5 w-3.5 stroke-current transition-transform duration-300 group-hover:-translate-y-0.5" fill="none" stroke-width="1.5">
+          <path d="M8 13V3m0 0L3.5 7.5M8 3l4.5 4.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </a>
+    </div>
+
+    <!-- 链接区 -->
+    <div class="grid grid-cols-2 gap-8 py-12 sm:grid-cols-3">
+      <div>
+        <p class="label-mono mb-4">文档</p>
+        <ul class="space-y-2">
+          {
+            docLinks.map((l) => (
+              <li>
+                <a href={l.href} class="text-sm text-fog-400 transition-colors hover:text-signal">
+                  {l.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div>
+        <p class="label-mono mb-4">资源</p>
+        <ul class="space-y-2">
+          {
+            resourceLinks.map((l) => (
+              <li>
+                <a
+                  href={l.href}
+                  rel="noreferrer noopener"
+                  class="inline-flex items-center gap-1 text-sm text-fog-400 transition-colors hover:text-signal"
+                >
+                  {l.label}
+                  <svg viewBox="0 0 12 12" class="h-3 w-3 stroke-current opacity-50" fill="none" stroke-width="1.5">
+                    <path d="M3.5 8.5 8.5 3.5M4.5 3.5h4v4" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div>
+        <p class="label-mono mb-4">社区</p>
+        <ul class="space-y-2">
+          {
+            communityLinks.map((l) => (
+              <li>
+                <a
+                  href={l.href}
+                  rel="noreferrer noopener"
+                  class="inline-flex items-center gap-1 text-sm text-fog-400 transition-colors hover:text-signal"
+                >
+                  {l.label}
+                  <svg viewBox="0 0 12 12" class="h-3 w-3 stroke-current opacity-50" fill="none" stroke-width="1.5">
+                    <path d="M3.5 8.5 8.5 3.5M4.5 3.5h4v4" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <!-- 底栏 -->
+    <div class="flex flex-col gap-3 border-t border-line-soft pt-8 text-xs text-fog-500 sm:flex-row sm:items-center sm:justify-between">
+      <p>
+        非官方中文站点 · 内容译自 <a href="https://github.com/47ng/nuqs#readme" rel="noreferrer noopener" class="text-fog-300 underline decoration-line underline-offset-4 hover:text-signal">官方 README</a> 与
+        <a href="https://nuqs.dev" rel="noreferrer noopener" class="text-fog-300 underline decoration-line underline-offset-4 hover:text-signal">nuqs.dev</a>
+      </p>
+      <p class="font-mono">MIT © {year} nuqs contributors</p>
+    </div>
+  </div>
+</footer>

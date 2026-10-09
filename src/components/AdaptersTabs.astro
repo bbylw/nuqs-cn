@@ -1,0 +1,197 @@
+---
+import CodeBlock from "./CodeBlock.astro";
+
+const adapters = [
+  {
+    id: "next-app",
+    label: "Next.js · app",
+    note: "支持的 Next.js 版本：>=14.2.0。旧版本请安装 nuqs@^1（无需此适配器代码）。",
+    file: "src/app/layout.tsx",
+    code: `import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { type ReactNode } from 'react'
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html>
+      <body>
+        <NuqsAdapter>{children}</NuqsAdapter>
+      </body>
+    </html>
+  )
+}`,
+  },
+  {
+    id: "next-pages",
+    label: "Next.js · pages",
+    note: "支持的 Next.js 版本：>=14.2.0。旧版本请安装 nuqs@^1（无需此适配器代码）。",
+    file: "src/pages/_app.tsx",
+    code: `import type { AppProps } from 'next/app'
+import { NuqsAdapter } from 'nuqs/adapters/next/pages'
+
+export default function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <NuqsAdapter>
+      <Component {...pageProps} />
+    </NuqsAdapter>
+  )
+}`,
+  },
+  {
+    id: "react",
+    label: "纯 React (SPA)",
+    note: "示例：通过 Vite 或 create-react-app 使用。",
+    file: "src/main.tsx",
+    code: `import { NuqsAdapter } from 'nuqs/adapters/react'
+
+createRoot(document.getElementById('root')!).render(
+  <NuqsAdapter>
+    <App />
+  </NuqsAdapter>
+)`,
+  },
+  {
+    id: "remix",
+    label: "Remix",
+    note: "支持的 Remix 版本：@remix-run/react@>=2",
+    file: "app/root.tsx",
+    code: `import { NuqsAdapter } from 'nuqs/adapters/remix'
+import { Outlet } from '@remix-run/react'
+
+export default function App() {
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  )
+}`,
+  },
+  {
+    id: "rr-v6",
+    label: "React Router v6",
+    note: "支持的 React Router 版本：react-router-dom@^6",
+    file: "src/main.tsx",
+    code: `import { NuqsAdapter } from 'nuqs/adapters/react-router/v6'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import App from './App'
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />
+  }
+])
+
+export function ReactRouter() {
+  return (
+    <NuqsAdapter>
+      <RouterProvider router={router} />
+    </NuqsAdapter>
+  )
+}`,
+  },
+  {
+    id: "rr-v7",
+    label: "React Router v7",
+    note: "支持的 React Router 版本：react-router@^7",
+    file: "app/root.tsx",
+    code: `import { NuqsAdapter } from 'nuqs/adapters/react-router/v7'
+import { Outlet } from 'react-router'
+
+export default function App() {
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  )
+}`,
+  },
+  {
+    id: "rr-v8",
+    label: "React Router v8",
+    note: "支持的 React Router 版本：react-router@^8",
+    file: "app/root.tsx",
+    code: `import { NuqsAdapter } from 'nuqs/adapters/react-router/v8'
+import { Outlet } from 'react-router'
+
+export default function App() {
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  )
+}`,
+  },
+  {
+    id: "tanstack",
+    label: "TanStack Router",
+    note: "支持 @tanstack/react-router@^1。注意：TanStack Router 支持尚处于实验阶段，且尚未覆盖 TanStack Start。",
+    file: "src/routes/__root.tsx",
+    code: `import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
+import { Outlet, createRootRoute } from '@tanstack/react-router'
+
+export const Route = createRootRoute({
+  component: () => (
+    <>
+      <NuqsAdapter>
+        <Outlet />
+      </NuqsAdapter>
+    </>
+  )
+})`,
+  },
+];
+---
+
+<div data-tabs class="not-prose">
+  <div
+    role="tablist"
+    aria-label="框架适配器"
+    class="-mx-1 flex flex-wrap gap-1.5 px-1 pb-2"
+  >
+    {
+      adapters.map((a, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`tab-${a.id}`}
+          aria-controls={`panel-${a.id}`}
+          tabindex={i === 0 ? 0 : -1}
+          data-tab-btn={a.id}
+          data-active={i === 0}
+          aria-selected={i === 0}
+          class="shrink-0 rounded-full border border-line bg-ink-850/60 px-3.5 py-1.5 font-mono text-[11px] text-fog-400 transition-all duration-150 hover:border-fog-500/40 hover:text-fog-200 data-[active=true]:border-signal/50 data-[active=true]:bg-signal/10 data-[active=true]:text-signal"
+        >
+          {a.label}
+        </button>
+      ))
+    }
+  </div>
+
+  {
+    adapters.map((a, i) => (
+      <div
+        id={`panel-${a.id}`}
+        role="tabpanel"
+        aria-labelledby={`tab-${a.id}`}
+        data-tab-panel={a.id}
+        hidden={i !== 0}
+        class="mt-3"
+      >
+        <CodeBlock code={a.code} lang="tsx" file={a.file} />
+        <p class="mt-3 flex items-start gap-2 text-xs leading-relaxed text-fog-500">
+          <svg
+            viewBox="0 0 14 14"
+            class="mt-0.5 h-3.5 w-3.5 shrink-0 stroke-amber-warn"
+            fill="none"
+            stroke-width="1.4"
+            aria-hidden="true"
+          >
+            <circle cx="7" cy="7" r="5.5" />
+            <path d="M7 4.5v3M7 9.8v.2" stroke-linecap="round" />
+          </svg>
+          {a.note}
+        </p>
+      </div>
+    ))
+  }
+</div>

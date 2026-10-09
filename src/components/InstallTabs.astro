@@ -1,0 +1,53 @@
+---
+import CodeBlock from "./CodeBlock.astro";
+
+const managers = [
+  { id: "npm", label: "npm", command: "npm install nuqs" },
+  { id: "pnpm", label: "pnpm", command: "pnpm add nuqs" },
+  { id: "yarn", label: "yarn", command: "yarn add nuqs" },
+  { id: "bun", label: "bun", command: "bun add nuqs" },
+  { id: "deno", label: "deno", command: "deno add nuqs" },
+  { id: "vlt", label: "vlt", command: "vlt install nuqs" },
+];
+---
+
+<div data-tabs class="not-prose">
+  <div
+    role="tablist"
+    aria-label="包管理器"
+    class="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-2"
+  >
+    {
+      managers.map((m, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`tab-${m.id}`}
+          aria-controls={`panel-${m.id}`}
+          tabindex={i === 0 ? 0 : -1}
+          data-tab-btn={m.id}
+          data-active={i === 0}
+          aria-selected={i === 0}
+          class="shrink-0 rounded-full border border-line bg-ink-850/60 px-4 py-1.5 font-mono text-xs text-fog-400 transition-all duration-150 hover:border-fog-500/40 hover:text-fog-200 data-[active=true]:border-signal/50 data-[active=true]:bg-signal/10 data-[active=true]:text-signal"
+        >
+          {m.label}
+        </button>
+      ))
+    }
+  </div>
+
+  {
+    managers.map((m, i) => (
+      <div
+        id={`panel-${m.id}`}
+        role="tabpanel"
+        aria-labelledby={`tab-${m.id}`}
+        data-tab-panel={m.id}
+        hidden={i !== 0}
+        class="mt-3"
+      >
+        <CodeBlock code={m.command} lang="bash" file={`${m.label} install`} />
+      </div>
+    ))
+  }
+</div>
