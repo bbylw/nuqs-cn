@@ -471,23 +471,23 @@ const [lat, setLat] = useQueryState('lat', geoCoordParser)`;
 
 const codeClass = "font-mono text-fog-200";
 const linkClass =
-  "text-fog-200 underline decoration-line underline-offset-4 transition-colors hover:text-signal";
+  "text-fog-200 underline decoration-line underline-offset-4 transition-colors hover:text-signal hover:decoration-signal";
 ---
 
 <BaseLayout>
   <!-- ============ HERO ============ -->
-  <section id="top" class="relative overflow-hidden px-5 pb-16 pt-28 sm:px-6 sm:pt-32">
+  <section id="top" class="relative overflow-hidden px-5 pb-16 pt-24 sm:px-6 sm:pt-28">
     <div class="mx-auto grid max-w-5xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-      <div class="reveal">
-        <p class="label-mono flex items-center gap-2.5">
+      <div>
+        <p class="hero-enter label-mono flex items-center gap-2.5">
           <span class="ping-dot relative inline-block h-1.5 w-1.5 rounded-full bg-signal"></span>
           TYPE-SAFE SEARCH PARAMS FOR REACT
         </p>
-        <h1 class="mt-6 font-display text-[clamp(3.2rem,9vw,5.75rem)] font-bold leading-[0.92] tracking-tighter text-fog-50">URL<br /><span class="text-signal">即</span>状态。</h1>
-        <p class="mt-6 max-w-lg text-[17px] leading-relaxed text-fog-300 text-pretty">面向 React 各类框架的、类型安全的搜索参数状态管理器。用法类似 <code class="font-mono text-[15px] text-signal">useState</code>，但状态存储在 URL 查询字符串中。</p>
+        <h1 class="hero-enter mt-6 font-display text-4xl font-bold leading-[0.95] tracking-tight text-fog-50 sm:text-5xl lg:text-6xl" style="animation-delay: 90ms">URL<br /><span class="text-signal">即</span>状态。</h1>
+        <p class="hero-enter mt-6 max-w-lg text-[17px] leading-relaxed text-fog-300 text-pretty" style="animation-delay: 180ms">面向 React 各类框架的、类型安全的搜索参数状态管理器。用法类似 <code class="font-mono text-[15px] text-signal">useState</code>，但状态存储在 URL 查询字符串中。</p>
 
-        <div class="mt-8 flex flex-wrap items-center gap-3">
-          <div class="group flex items-center gap-2.5 rounded-lg border border-line bg-ink-850/90 py-2.5 pl-4 pr-2.5 transition-colors duration-200 hover:border-signal/40">
+        <div class="hero-enter mt-8 flex flex-wrap items-center gap-3" style="animation-delay: 270ms">
+          <div class="group flex items-center gap-2.5 rounded-lg border border-line bg-ink-850/90 py-2.5 pl-4 pr-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-signal/40 hover:shadow-lg hover:shadow-black/30">
             <span class="font-mono text-sm text-fog-500">$</span>
             <code class="font-mono text-sm text-fog-50">bun add nuqs</code>
             <button type="button" data-copy-btn data-copy="bun add nuqs" class="flex items-center gap-1.5 rounded px-2 py-1 font-mono text-[11px] text-fog-400 transition-colors hover:text-signal data-[copied=true]:text-signal" aria-label="复制安装命令">
@@ -495,10 +495,10 @@ const linkClass =
               <span data-copy-label>复制</span>
             </button>
           </div>
-          <a href="#features" class="rounded-lg border border-signal/50 bg-signal/10 px-4 py-2.5 font-mono text-sm text-signal transition-all duration-200 hover:bg-signal/20 active:scale-[0.98]">浏览特性</a>
+          <a href="#features" class="rounded-lg border border-signal/50 bg-signal/10 px-4 py-2.5 font-mono text-sm text-signal transition-all duration-200 hover:-translate-y-0.5 hover:bg-signal/20 hover:shadow-lg hover:shadow-black/30 active:scale-[0.98]">浏览特性</a>
         </div>
 
-        <ul class="mt-7 flex flex-wrap gap-2" aria-label="项目信息">
+        <ul class="hero-enter mt-7 flex flex-wrap gap-2" aria-label="项目信息" style="animation-delay: 360ms">
           <li class="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-fog-400">npm v2.10.2</li>
           <li class="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-fog-400">TypeScript</li>
           <li class="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-fog-400">MIT 许可证</li>
@@ -507,7 +507,7 @@ const linkClass =
         </ul>
       </div>
 
-      <div class="reveal" style="--reveal-delay: 140ms">
+      <div class="hero-enter" style="animation-delay: 220ms">
         <UrlBarDemo client:load />
       </div>
     </div>
@@ -536,7 +536,7 @@ const linkClass =
   <!-- ============ 01 特性 ============ -->
   <Section id="features" num="01" label="FEATURES" title="特性" lede="URL 是唯一可信来源——nuqs 围绕它提供了一整套类型安全的工具链。">
     <div class="grid grid-cols-6 gap-3">
-      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-4">
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-signal/30 hover:bg-ink-800/40 hover:shadow-xl hover:shadow-black/30 md:col-span-4">
         <div class="flex items-baseline gap-4">
           <span class="font-mono text-xs tabular-nums text-signal">01</span>
           <h3 class="font-display text-xl font-semibold">全框架适配器</h3>
@@ -549,7 +549,7 @@ const linkClass =
         </div>
       </article>
 
-      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-2" style="--reveal-delay: 80ms">
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-signal/30 hover:bg-ink-800/40 hover:shadow-xl hover:shadow-black/30 md:col-span-2" style="--reveal-delay: 80ms">
         <div class="flex items-baseline gap-4">
           <span class="font-mono text-xs tabular-nums text-signal">02</span>
           <h3 class="font-display text-xl font-semibold">简单</h3>
@@ -557,7 +557,7 @@ const linkClass =
         <p class="mt-3 text-sm leading-relaxed text-fog-400">URL 即唯一可信来源。状态与地址栏永远同步——可分享、可收藏、可后退。</p>
       </article>
 
-      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-2">
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-signal/30 hover:bg-ink-800/40 hover:shadow-xl hover:shadow-black/30 md:col-span-2">
         <div class="flex items-baseline gap-4">
           <span class="font-mono text-xs tabular-nums text-signal">03</span>
           <h3 class="font-display text-xl font-semibold">历史</h3>
@@ -565,7 +565,7 @@ const linkClass =
         <p class="mt-3 text-sm leading-relaxed text-fog-400">默认替换历史记录，或追加新条目——用「后退」按钮在状态更新之间导航。</p>
       </article>
 
-      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-4" style="--reveal-delay: 80ms">
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-signal/30 hover:bg-ink-800/40 hover:shadow-xl hover:shadow-black/30 md:col-span-4" style="--reveal-delay: 80ms">
         <div class="flex items-baseline gap-4">
           <span class="font-mono text-xs tabular-nums text-signal">04</span>
           <h3 class="font-display text-xl font-semibold">内置解析器</h3>
@@ -578,7 +578,7 @@ const linkClass =
         </div>
       </article>
 
-      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-3">
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-signal/30 hover:bg-ink-800/40 hover:shadow-xl hover:shadow-black/30 md:col-span-3">
         <div class="flex items-baseline gap-4">
           <span class="font-mono text-xs tabular-nums text-signal">05</span>
           <h3 class="font-display text-xl font-semibold">useQueryStates</h3>
@@ -586,7 +586,7 @@ const linkClass =
         <p class="mt-3 text-sm leading-relaxed text-fog-400">关联多个查询字符串键——同一事件循环 tick 内的更新会被批量合并，一次性刷新到 URL。</p>
       </article>
 
-      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-3" style="--reveal-delay: 80ms">
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-signal/30 hover:bg-ink-800/40 hover:shadow-xl hover:shadow-black/30 md:col-span-3" style="--reveal-delay: 80ms">
         <div class="flex items-baseline gap-4">
           <span class="font-mono text-xs tabular-nums text-signal">06</span>
           <h3 class="font-display text-xl font-semibold">浅层更新</h3>
@@ -594,7 +594,7 @@ const linkClass =
         <p class="mt-3 text-sm leading-relaxed text-fog-400">默认仅改写客户端 URL，不向服务端发起请求；需要时也可通知 Server Components 重新渲染。</p>
       </article>
 
-      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-3">
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-signal/30 hover:bg-ink-800/40 hover:shadow-xl hover:shadow-black/30 md:col-span-3">
         <div class="flex items-baseline gap-4">
           <span class="font-mono text-xs tabular-nums text-signal">07</span>
           <h3 class="font-display text-xl font-semibold">服务端缓存</h3>
@@ -602,7 +602,7 @@ const linkClass =
         <p class="mt-3 text-sm leading-relaxed text-fog-400"><code class={codeClass}>createSearchParamsCache</code>：在嵌套的服务端组件中类型安全地访问 searchParams。</p>
       </article>
 
-      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-colors duration-200 hover:border-signal/30 hover:bg-ink-800/40 md:col-span-3" style="--reveal-delay: 80ms">
+      <article class="reveal group col-span-6 rounded-xl border border-line bg-ink-850/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-signal/30 hover:bg-ink-800/40 hover:shadow-xl hover:shadow-black/30 md:col-span-3" style="--reveal-delay: 80ms">
         <div class="flex items-baseline gap-4">
           <span class="font-mono text-xs tabular-nums text-signal">08</span>
           <h3 class="font-display text-xl font-semibold">过渡</h3>
@@ -615,7 +615,7 @@ const linkClass =
   <!-- ============ 02 安装 ============ -->
   <Section id="install" num="02" label="INSTALL" title="安装" lede="一个包，所有框架。nuqs 自带各框架的适配器子路径导出。">
     <InstallTabs />
-    <p class="mt-6 text-sm leading-relaxed text-fog-500">完整文档请阅读 <a href="https://nuqs.dev" rel="noreferrer noopener" class="text-fog-300 underline decoration-line underline-offset-4 transition-colors hover:text-signal">nuqs.dev</a>。本站点使用 <code class={codeClass}>nuqs</code> 作为运行时依赖构建，页面中的交互演示即由它驱动。</p>
+    <p class="mt-6 text-sm leading-relaxed text-fog-500">完整文档请阅读 <a href="https://nuqs.dev" rel="noreferrer noopener" class="text-fog-300 underline decoration-line underline-offset-4 transition-colors hover:text-signal hover:decoration-signal">nuqs.dev</a>。本站点使用 <code class={codeClass}>nuqs</code> 作为运行时依赖构建，页面中的交互演示即由它驱动。</p>
   </Section>
 
   <!-- ============ 03 适配器 ============ -->
@@ -887,14 +887,15 @@ const linkClass =
   </Section>
 
   <!-- ============ 许可证收尾 ============ -->
-  <section class="border-t border-line-soft">
+  <section>
+    <div aria-hidden="true" class="h-px w-full bg-gradient-to-r from-transparent via-signal/30 to-transparent"></div>
     <div class="mx-auto max-w-5xl px-5 py-20 text-center sm:px-6">
       <p class="label-mono">LICENSE</p>
       <h2 class="mx-auto mt-4 max-w-2xl font-display text-4xl font-bold tracking-tight text-fog-50 sm:text-5xl">MIT，由 <a href="https://francoisbest.com" rel="noreferrer noopener" class="text-signal transition-colors hover:text-signal-strong">François Best</a> 制作</h2>
-      <p class="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-fog-400 text-pretty">工作中用到了这个包？<a href="https://github.com/sponsors/franky47" rel="noreferrer noopener" class="text-fog-200 underline decoration-line underline-offset-4 transition-colors hover:text-signal">赞助我</a>以帮助提供支持与维护。</p>
+      <p class="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-fog-400 text-pretty">工作中用到了这个包？<a href="https://github.com/sponsors/franky47" rel="noreferrer noopener" class="text-fog-200 underline decoration-line underline-offset-4 transition-colors hover:text-signal hover:decoration-signal">赞助我</a>以帮助提供支持与维护。</p>
       <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
-        <a href="https://github.com/47ng/nuqs" rel="noreferrer noopener" class="rounded-lg border border-signal/50 bg-signal/10 px-5 py-2.5 font-mono text-sm text-signal transition-all duration-200 hover:bg-signal/20 active:scale-[0.98]">GitHub 仓库</a>
-        <a href="https://www.npmjs.com/package/nuqs" rel="noreferrer noopener" class="rounded-lg border border-line px-5 py-2.5 font-mono text-sm text-fog-300 transition-all duration-200 hover:border-signal/40 hover:text-signal active:scale-[0.98]">npm 包</a>
+        <a href="https://github.com/47ng/nuqs" rel="noreferrer noopener" class="rounded-lg border border-signal/50 bg-signal/10 px-5 py-2.5 font-mono text-sm text-signal transition-all duration-200 hover:-translate-y-0.5 hover:bg-signal/20 hover:shadow-lg hover:shadow-black/30 active:scale-[0.98]">GitHub 仓库</a>
+        <a href="https://www.npmjs.com/package/nuqs" rel="noreferrer noopener" class="rounded-lg border border-line px-5 py-2.5 font-mono text-sm text-fog-300 transition-all duration-200 hover:-translate-y-0.5 hover:border-signal/40 hover:text-signal hover:shadow-lg hover:shadow-black/30 active:scale-[0.98]">npm 包</a>
       </div>
       <p class="mt-14 font-mono text-[11px] tracking-widest text-fog-500">非官方中文文档站点 · 内容译自 nuqs 官方 README</p>
     </div>

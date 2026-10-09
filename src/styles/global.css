@@ -51,8 +51,7 @@
 
   :focus-visible {
     outline: 2px solid var(--color-signal);
-    outline-offset: 2px;
-    border-radius: 2px;
+    outline-offset: 3px;
   }
 
   h1, h2, h3, h4 {
@@ -110,6 +109,11 @@ pre.astro-code .line {
 }
 
 /* ---------- 工具类 ---------- */
+/* 网格项默认 min-width:auto，宽代码块会在窄屏把单列轨道撑破页面 */
+.grid > * {
+  min-width: 0;
+}
+
 @utility font-display {
   font-family: var(--font-display);
 }
@@ -184,9 +188,50 @@ pre.astro-code .line {
   opacity: 0;
 }
 
+/* fill 用 backwards：动画结束后释放 transform，避免压住卡片 hover 位移 */
 .reveal.is-visible {
-  animation: reveal-up 0.7s var(--ease-out-expo) forwards;
+  opacity: 1;
+  animation: reveal-up 0.7s var(--ease-out-expo) backwards;
   animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* 首屏入场：纯 CSS 加载级联，不依赖脚本 */
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-enter {
+  animation: hero-enter 0.8s var(--ease-out-expo) both;
+}
+
+/* 导航链接下划线：自左向右展开 */
+.nav-link {
+  position: relative;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: 0.3rem;
+  height: 1px;
+  background: var(--color-signal);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s var(--ease-out-quart);
+}
+
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+  transform: scaleX(1);
 }
 
 @keyframes caret-blink {
@@ -238,7 +283,7 @@ pre.astro-code .line {
   html {
     scroll-behavior: auto;
   }
-  .reveal, .reveal.is-visible {
+  .reveal, .reveal.is-visible, .hero-enter {
     opacity: 1;
     animation: none;
   }

@@ -9,7 +9,7 @@ interface DemoFrameProps {
 export function DemoFrame({ title, badge, children }: DemoFrameProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-line bg-ink-850/90 shadow-[0_28px_70px_-30px_rgba(0,0,0,0.8)]">
-      <div className="flex items-center justify-between gap-3 border-b border-line/80 bg-ink-800/40 px-4 py-2.5">
+      <div className="flex items-center justify-between gap-3 border-b border-line/80 bg-gradient-to-b from-ink-800/60 to-ink-800/20 px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-signal/80" aria-hidden="true" />
           <span className="h-2.5 w-2.5 rounded-full bg-line" aria-hidden="true" />
@@ -68,4 +68,4 @@ export function DemoButton({
 }
 
 export const inputBase =
-  "w-full rounded border border-line bg-ink-900 px-3 py-2 font-mono text-sm text-fog-50 placeholder:text-fog-500 transition-colors duration-150 focus:border-signal/60 focus:outline-none";
+  "w-full rounded border border-line bg-ink-900 px-3 py-2 font-mono text-sm text-fog-50 placeholder:text-fog-500 transition-colors duration-150 focus:border-signal/60";
